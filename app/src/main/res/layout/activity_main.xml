@@ -45,7 +45,7 @@
         app:layout_constraintRight_toRightOf="parent"
         tools:ignore="HardcodedText" />
 
-    <SeekBar
+    <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/seekBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

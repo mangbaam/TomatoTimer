@@ -28,6 +28,9 @@ class MainActivity : AppCompatActivity() {
     private var bellSoundId: Int? = null
 
     private var currentCountDownTimer: CountDownTimer? = null
+    private var remainMillis: Long? = null
+
+    private var isRunning = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +55,8 @@ class MainActivity : AppCompatActivity() {
         soundPool.release()
     }
 
+
+
     private fun bindViews() {
         seekBar.setOnSeekBarChangeListener (
             object: SeekBar.OnSeekBarChangeListener {
@@ -73,6 +78,7 @@ class MainActivity : AppCompatActivity() {
                     seekBar ?: return
 
                     if (seekBar.progress == 0) {
+                        changeTimerColor(resources.getColor(R.color.white))
                         stopCountDown()
                     } else {
                         startCountDown()
@@ -80,6 +86,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         )
+
+        remainMinutesTextView.setOnClickListener {
+            pauseTimer()
+        }
+
+        remainSecondsTextView.setOnClickListener {
+            pauseTimer()
+        }
     }
 
     private fun initSounds() {
@@ -92,6 +106,7 @@ class MainActivity : AppCompatActivity() {
             override fun onTick(millisUntilFinished: Long) {
                 updateRemainTime(millisUntilFinished)
                 updateSeekBar(millisUntilFinished)
+                remainMillis = millisUntilFinished
             }
 
             override fun onFinish() {
@@ -102,6 +117,8 @@ class MainActivity : AppCompatActivity() {
     private fun startCountDown() {
         currentCountDownTimer = createCountDownTimer(seekBar.progress * 60 * 1000L)
         currentCountDownTimer?.start()
+        isRunning = true
+        changeTimerColor(resources.getColor(R.color.white))
 
         tickingSoundId?.let { soundId ->
             soundPool.play(soundId, 1F, 1F, 0, -1, 1F)
@@ -111,12 +128,22 @@ class MainActivity : AppCompatActivity() {
     private fun stopCountDown() {
         currentCountDownTimer?.cancel()
         currentCountDownTimer = null
+        isRunning = false
         soundPool.autoPause()
+    }
+
+    private fun resumeCountDown() {
+        // TODO 다시시작 -> 멈춘 시간에서 다시 시작
+        currentCountDownTimer = remainMillis?.let { createCountDownTimer(it) }
+        currentCountDownTimer?.start()
+        currentCountDownTimer?.let { isRunning = true }
     }
 
     private fun completeCountDown() {
         updateRemainTime(0)
         updateSeekBar(0)
+
+        isRunning = false
 
         soundPool.autoPause()
         bellSoundId?.let { soundId ->
@@ -133,5 +160,25 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateSeekBar(remainMillis: Long) {
         seekBar.progress = (remainMillis / 1000 / 60).toInt()
+    }
+
+    private fun pauseTimer() {
+        when (isRunning) {
+            true -> {
+                changeTimerColor(resources.getColor(R.color.yellow))
+                stopCountDown()
+            }
+            false -> {
+                if (seekBar.progress != 0) {
+                    changeTimerColor(resources.getColor(R.color.white))
+                    resumeCountDown()
+                }
+            }
+        }
+    }
+
+    private fun changeTimerColor(color: Int) {
+        remainSecondsTextView.setTextColor(color)
+        remainMinutesTextView.setTextColor(color)
     }
 }
